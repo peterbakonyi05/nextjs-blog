@@ -1,11 +1,31 @@
 import React from "react";
 import { useDispatch, useSelector } from "react-redux";
-import Image from "next/image";
 import Layout from "../components/layout";
 import { BookAction } from "../lib/book/book.action";
 import { BookSelector } from "../lib/book/book.selector";
+import { wrapper } from "../lib/createStore";
 
 import styles from "./books.module.scss";
+
+export const getServerSideProps = wrapper.getServerSideProps<{}>(
+  (store) =>
+    ({ req, res, query }) => {
+      store.dispatch(
+        BookAction.search.request({ query: query["q"] as string })
+      );
+      return new Promise((resolve) => {
+        const unsubscribe = store.subscribe(() => {
+          const state = store.getState();
+          if (state.book.isLoading === false) {
+            unsubscribe();
+            resolve({
+              props: {},
+            });
+          }
+        });
+      });
+    }
+);
 
 export const Books: React.FC = () => {
   const books = useSelector(BookSelector.books);

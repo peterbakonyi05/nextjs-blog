@@ -20,7 +20,10 @@ import { BehaviorSubject } from "rxjs";
 
 import { extractMultipleEffects } from "./createEffect";
 import { mergeMap } from "rxjs/operators";
-import { useMemo } from "react";
+import { Context, createWrapper } from "next-redux-wrapper";
+import { AppState } from "./appState.model";
+import { bookReducer } from "./book/book.reducer";
+import { BookEffect } from "./book/book.effect";
 
 const DEBUG_REDUX_QUERY_PARAM = "debugRedux";
 
@@ -119,45 +122,19 @@ const createStore = <TState = object>(
   return store as AsyncStore<TState>;
 };
 
-let store: any;
-export const initializeStore = <TState = object>(
-  config: StoreConfig<TState>
-) => {
-  let _store = store ?? createStore(config);
-
-  // After navigating to a page with an initial Redux state, merge that state
-  // with the current state in the store, and create a new store
-  if (config.preloadedState && store) {
-    _store = createStore({
-      ...config,
-      preloadedState: {
-        ...store.getState(),
-        ...config.preloadedState,
-      },
-    });
-    // Reset the current store
-    store = undefined;
-  }
-
-  // For SSG and SSR always create a new store
-  if (typeof window === "undefined") return _store;
-  // Create the store once in the client
-  if (!store) store = _store;
-
-  return _store;
+const reduxConfig: StoreConfig<AppState> = {
+  reducers: {
+    book: bookReducer,
+  },
+  effects: [BookEffect],
+  devTools: true,
 };
 
-export function useStore<TState = object>(config: StoreConfig<TState>) {
-  const store = useMemo(
-    () => initializeStore(config),
-    // TODO: this should be improved
-    [
-      config.reducers,
-      config.devTools,
-      config.extraMiddlewares,
-      config.preloadedState,
-      config.extraMiddlewares,
-    ]
-  );
-  return store;
-}
+const makeStore = (context: Context) => {
+  return createStore(reduxConfig);
+};
+
+// export an assembled wrapper
+export const wrapper = createWrapper<Store<AppState>>(makeStore, {
+  debug: true,
+});

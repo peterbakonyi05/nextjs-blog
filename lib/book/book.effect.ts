@@ -3,7 +3,7 @@ import {
   map,
   switchMap,
   catchError,
-  debounceTime,
+  throttleTime,
 } from "rxjs/operators";
 import { of } from "rxjs";
 import { isActionOf } from "typesafe-actions";
@@ -15,7 +15,7 @@ export const BookEffect = {
   search$: createEffect((action$) =>
     action$.pipe(
       filter(isActionOf(BookAction.search.request)),
-      debounceTime(100),
+      throttleTime(100),
       switchMap(({ payload }) =>
         BookService.getBooks(payload.query).pipe(
           map((response) => BookAction.search.success(response)),

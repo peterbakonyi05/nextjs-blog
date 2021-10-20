@@ -1,6 +1,7 @@
 import { Action, createReducer } from "typesafe-actions";
 import { BookAction } from "./book.action";
 import { BookState } from "./book.model";
+import { HydrateAction } from "../hydrate/hydrate.action";
 
 const initialState: BookState = {
   isLoading: false,
@@ -25,4 +26,11 @@ export const bookReducer = createReducer<BookState, Action>(initialState)
     ...state,
     isLoading: false,
     errorMessage: payload.message,
-  }));
+  }))
+  // payload is the entire state sent from the server
+  .handleAction(HydrateAction.hydrate, (state, { payload }) => {
+    return {
+      ...state,
+      ...payload.book,
+    };
+  });
