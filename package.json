@@ -5,9 +5,12 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "analyze": "cross-env ANALYZE=true npm run build"
   },
   "dependencies": {
+    "@next/bundle-analyzer": "^11.1.2",
+    "cross-env": "^7.0.3",
     "date-fns": "^2.25.0",
     "gray-matter": "^4.0.3",
     "next": "^11.0.0",

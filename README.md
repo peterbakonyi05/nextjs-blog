@@ -11,7 +11,7 @@ This is a starter template for [Learn Next.js](https://nextjs.org/learn).
   - [done] refactor solution to make it nicer (extract completion handling to a util, find a nicer way to wrapper, possibly introduce inversifyJS at this point??)
   - make sure observables are clean up/completed when response is sent to client (test with another effect that has a timer)
   - document alternative approaches and link to useful exampels and github issues
-- add bundle analyzer to webpack config and inspect bundle size
+- [done] add bundle analyzer to webpack config and inspect bundle size
 - example for lazy-loaded redux slices
 - example of handling startup config (GA key, Contentful API key etc..)
 - example of integrating a legacy system (i.e.: lazy-loaded AngularJS application on certain routes)
