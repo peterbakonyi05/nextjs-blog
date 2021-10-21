@@ -11,6 +11,7 @@ import {
   ReducersMapObject,
   Store,
 } from "redux";
+import reduxLogger from "redux-logger";
 import {
   combineEpics,
   createEpicMiddleware,
@@ -57,6 +58,8 @@ const createStore = <TState = object>(
   if (config.extraMiddlewares && config.extraMiddlewares.length > 0) {
     middlewares.push(...config.extraMiddlewares);
   }
+
+  middlewares.push(reduxLogger);
 
   let composeEnhancer: any = compose;
   if (
