@@ -17,10 +17,10 @@ import {
   createEpicMiddleware,
   EpicMiddleware,
 } from "redux-observable";
-import { BehaviorSubject, Observable } from "rxjs";
+import { BehaviorSubject, Observable, Subject } from "rxjs";
 
 import { extractMultipleEffects } from "./createEffect";
-import { mergeMap, take, timeout } from "rxjs/operators";
+import { mergeMap, take, takeUntil, timeout } from "rxjs/operators";
 import { Context, createWrapper } from "next-redux-wrapper";
 import { AppState } from "./appState.model";
 import { bookReducer } from "./book/book.reducer";
@@ -58,6 +58,7 @@ const createStore = <TState = object>(
   config: StoreConfig<TState>
 ): AsyncStore<TState> => {
   console.log("CREATING A NEW STORE INSTANCE");
+  const shutdown$ = new Subject<void>();
   const middlewares: Middleware[] = [];
   let epicMiddleware: EpicMiddleware<any> | undefined;
   const isDevelopment = process.env.NODE_ENV === "development";
@@ -74,7 +75,7 @@ const createStore = <TState = object>(
   // super minimal config to see what's going on
   middlewares.push(
     createLogger({
-      // stateTransformer: () => "-",
+      stateTransformer: () => "-",
       actionTransformer: (action) => action.type,
     })
   );
@@ -111,7 +112,16 @@ const createStore = <TState = object>(
   if (config.effects && epicMiddleware) {
     effects$.next(combineEpics(...extractMultipleEffects(config.effects)));
     epicMiddleware.run((action$, state$) =>
-      effects$.pipe(mergeMap((epic) => epic(action$, state$, {})))
+      effects$.pipe(
+        mergeMap((epic) =>
+          epic(
+            action$.pipe(takeUntil(shutdown$)),
+            state$.pipe(takeUntil(shutdown$)),
+            {}
+          )
+        ),
+        takeUntil(shutdown$)
+      )
     );
   }
 
@@ -155,8 +165,9 @@ const createStore = <TState = object>(
       );
 
       const handleFinish = () => {
-        // TODO: clean up effects
         unsubscribeFromStore();
+        shutdown$.next();
+        shutdown$.complete();
         resolve({ props: {} });
       };
 
