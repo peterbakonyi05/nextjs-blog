@@ -1,9 +1,10 @@
-import React from "react";
+import React, { useCallback, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import Layout from "../components/layout";
 import { BookAction } from "../lib/book/book.action";
 import { BookSelector } from "../lib/book/book.selector";
 import { wrapper } from "../lib/createStore";
+import { useQueryParams } from "../lib/useQueryParam.hook";
 
 import styles from "./books.module.scss";
 
@@ -31,15 +32,32 @@ export const Books: React.FC = () => {
   const books = useSelector(BookSelector.books);
   const dispatch = useDispatch();
   const query = useSelector(BookSelector.query);
+  const { queryParams, updateQueryParams } = useQueryParams();
+
+  const handleSearch = useCallback((query: string) => {
+    dispatch(BookAction.search.request({ query }));
+  }, []);
+
+  // initial search in case SSR does not render
+  useEffect(() => {
+    if (query !== queryParams.q) {
+      handleSearch(queryParams.q as string);
+    }
+  }, []);
+
+  // update query params whenever query changes
+  useEffect(() => {
+    if (query !== queryParams.q) {
+      updateQueryParams({ q: query });
+    }
+  }, [query]);
 
   return (
     <Layout>
       <input
         type="search"
         value={query}
-        onChange={(event) =>
-          dispatch(BookAction.search.request({ query: event.target.value }))
-        }
+        onChange={(event) => handleSearch(event.target.value)}
       />
       <ul>
         {books?.map((book) => (
