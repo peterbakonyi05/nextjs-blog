@@ -5,4 +5,5 @@ export const BookSelector = {
   isLoading: (state: AppState): boolean => state.book.isLoading,
   books: (state: AppState): Book[] => state.book.books,
   query: (state: AppState): string => state.book.query,
+  isSsrReady: (state: AppState): boolean => state.book.isSsrReady,
 };

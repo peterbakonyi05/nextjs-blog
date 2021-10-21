@@ -8,23 +8,26 @@ const initialState: BookState = {
   query: "",
   totalItems: 0,
   books: [],
+  isSsrReady: false,
 };
 
 export const bookReducer = createReducer<BookState, Action>(initialState)
   .handleAction(BookAction.search.request, (state, { payload }) => ({
     ...state,
     isLoading: true,
-    query: payload.query,
+    query: payload.query || "",
   }))
   .handleAction(BookAction.search.success, (state, { payload }) => ({
     ...state,
     isLoading: false,
+    isSsrReady: true,
     books: payload.items,
     totalItems: payload.totalItems,
   }))
   .handleAction(BookAction.search.failure, (state, { payload }) => ({
     ...state,
     isLoading: false,
+    isSsrReady: true,
     errorMessage: payload.message,
   }))
   // payload is the entire state sent from the server

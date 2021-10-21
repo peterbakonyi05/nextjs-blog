@@ -11,20 +11,21 @@ import {
   ReducersMapObject,
   Store,
 } from "redux";
-import reduxLogger from "redux-logger";
+import { createLogger } from "redux-logger";
 import {
   combineEpics,
   createEpicMiddleware,
   EpicMiddleware,
 } from "redux-observable";
-import { BehaviorSubject } from "rxjs";
+import { BehaviorSubject, Observable } from "rxjs";
 
 import { extractMultipleEffects } from "./createEffect";
-import { mergeMap } from "rxjs/operators";
+import { mergeMap, take, timeout } from "rxjs/operators";
 import { Context, createWrapper } from "next-redux-wrapper";
 import { AppState } from "./appState.model";
 import { bookReducer } from "./book/book.reducer";
 import { BookEffect } from "./book/book.effect";
+import { GetServerSidePropsResult } from "next";
 
 const DEBUG_REDUX_QUERY_PARAM = "debugRedux";
 
@@ -43,6 +44,14 @@ export interface AsyncStore<TState> extends Store<TState> {
   ) => void;
 }
 
+export interface ServerSideStore<TState> extends Store<TState> {
+  handleServerSideRendering: (config: {
+    init: () => void;
+    onReady$: (state$: Observable<TState>) => Observable<unknown>;
+    timeoutInMs?: number;
+  }) => Promise<GetServerSidePropsResult<{}>>;
+}
+
 const createStore = <TState = object>(
   config: StoreConfig<TState>
 ): AsyncStore<TState> => {
@@ -59,7 +68,13 @@ const createStore = <TState = object>(
     middlewares.push(...config.extraMiddlewares);
   }
 
-  middlewares.push(reduxLogger);
+  // super minimal config to see what's going on
+  middlewares.push(
+    createLogger({
+      stateTransformer: () => "-",
+      actionTransformer: (action) => action.type,
+    })
+  );
 
   let composeEnhancer: any = compose;
   if (
@@ -122,6 +137,43 @@ const createStore = <TState = object>(
     }
   };
 
+  // TODO: only define when SSR
+  (store as ServerSideStore<TState>).handleServerSideRendering = ({
+    init,
+    onReady$,
+    timeoutInMs = 1500,
+  }) => {
+    const start = Date.now();
+    return new Promise((resolve, reject) => {
+      init();
+      const state$ = new BehaviorSubject<TState>(store.getState());
+      const unsubscribeFromStore = store.subscribe(() =>
+        state$.next(store.getState())
+      );
+
+      const handleFinish = () => {
+        // TODO: clean up effects
+        unsubscribeFromStore();
+        resolve({ props: {} });
+      };
+
+      onReady$(state$)
+        .pipe(take(1), timeout(timeoutInMs))
+        .subscribe({
+          complete: () => {
+            console.log(
+              `HANDLER_SSR_REDUX FINISHED IN ${Date.now() - start}ms`
+            );
+            handleFinish();
+          },
+          error: (err) => {
+            console.error("ERROR IN HANDLER_SSR_REDUX", err);
+            handleFinish();
+          },
+        });
+    });
+  };
+
   return store as AsyncStore<TState>;
 };
 
@@ -139,5 +191,5 @@ const makeStore = (context: Context) => {
 
 // export an assembled wrapper
 export const wrapper = createWrapper<Store<AppState>>(makeStore, {
-  debug: true,
+  debug: false,
 });

@@ -1,9 +1,11 @@
 import React, { useCallback, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { filter } from "rxjs";
 import Layout from "../components/layout";
+import { AppState } from "../lib/appState.model";
 import { BookAction } from "../lib/book/book.action";
 import { BookSelector } from "../lib/book/book.selector";
-import { wrapper } from "../lib/createStore";
+import { ServerSideStore, wrapper } from "../lib/createStore";
 import { useQueryParams } from "../lib/useQueryParam.hook";
 
 import styles from "./books.module.scss";
@@ -14,16 +16,13 @@ export const getServerSideProps = wrapper.getServerSideProps<{}>(
       store.dispatch(
         BookAction.search.request({ query: query["q"] as string })
       );
-      return new Promise((resolve) => {
-        const unsubscribe = store.subscribe(() => {
-          const state = store.getState();
-          if (state.book.isLoading === false) {
-            unsubscribe();
-            resolve({
-              props: {},
-            });
-          }
-        });
+      return (store as ServerSideStore<AppState>).handleServerSideRendering({
+        init: () =>
+          store.dispatch(
+            BookAction.search.request({ query: query["q"] as string })
+          ),
+        onReady$: (state$) =>
+          state$.pipe(filter((value) => BookSelector.isSsrReady(value))),
       });
     }
 );
@@ -40,7 +39,7 @@ export const Books: React.FC = () => {
 
   // initial search in case SSR does not render
   useEffect(() => {
-    if (query !== queryParams.q) {
+    if (query !== queryParams.q || (!!queryParams.q && !books.length)) {
       handleSearch(queryParams.q as string);
     }
   }, []);

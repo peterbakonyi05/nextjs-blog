@@ -4,6 +4,7 @@ export interface BookState {
   query?: string;
   totalItems: number;
   books: Book[];
+  isSsrReady: boolean;
 }
 
 export interface Book {
