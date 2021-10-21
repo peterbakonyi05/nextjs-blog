@@ -1,11 +1,12 @@
 import React, { useCallback, useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { batch, useDispatch, useSelector } from "react-redux";
 import { filter } from "rxjs";
 import Layout from "../components/layout";
 import { AppState } from "../lib/appState.model";
 import { BookAction } from "../lib/book/book.action";
 import { BookSelector } from "../lib/book/book.selector";
 import { ServerSideStore, wrapper } from "../lib/createStore";
+import { PingAction } from "../lib/ping/ping.action";
 import { useQueryParams } from "../lib/useQueryParam.hook";
 
 import styles from "./books.module.scss";
@@ -13,14 +14,15 @@ import styles from "./books.module.scss";
 export const getServerSideProps = wrapper.getServerSideProps<{}>(
   (store) =>
     ({ req, res, query }) => {
-      store.dispatch(
-        BookAction.search.request({ query: query["q"] as string })
-      );
       return (store as ServerSideStore<AppState>).handleServerSideRendering({
-        init: () =>
-          store.dispatch(
-            BookAction.search.request({ query: query["q"] as string })
-          ),
+        init: () => {
+          batch(() => {
+            store.dispatch(
+              BookAction.search.request({ query: query["q"] as string })
+            );
+            store.dispatch(PingAction.ping());
+          });
+        },
         onReady$: (state$) =>
           state$.pipe(filter((value) => BookSelector.isSsrReady(value))),
       });

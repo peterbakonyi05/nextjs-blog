@@ -26,6 +26,8 @@ import { AppState } from "./appState.model";
 import { bookReducer } from "./book/book.reducer";
 import { BookEffect } from "./book/book.effect";
 import { GetServerSidePropsResult } from "next";
+import { pingReducer } from "./ping/ping.reducer";
+import { PingEffect } from "./ping/ping.effect";
 
 const DEBUG_REDUX_QUERY_PARAM = "debugRedux";
 
@@ -55,6 +57,7 @@ export interface ServerSideStore<TState> extends Store<TState> {
 const createStore = <TState = object>(
   config: StoreConfig<TState>
 ): AsyncStore<TState> => {
+  console.log("CREATING A NEW STORE INSTANCE");
   const middlewares: Middleware[] = [];
   let epicMiddleware: EpicMiddleware<any> | undefined;
   const isDevelopment = process.env.NODE_ENV === "development";
@@ -71,7 +74,7 @@ const createStore = <TState = object>(
   // super minimal config to see what's going on
   middlewares.push(
     createLogger({
-      stateTransformer: () => "-",
+      // stateTransformer: () => "-",
       actionTransformer: (action) => action.type,
     })
   );
@@ -180,8 +183,9 @@ const createStore = <TState = object>(
 const reduxConfig: StoreConfig<AppState> = {
   reducers: {
     book: bookReducer,
+    ping: pingReducer,
   },
-  effects: [BookEffect],
+  effects: [BookEffect, PingEffect],
   devTools: true,
 };
 
