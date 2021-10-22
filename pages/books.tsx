@@ -1,17 +1,16 @@
 import React, { useCallback, useEffect } from "react";
 import { batch, useDispatch, useSelector } from "react-redux";
 import { filter } from "rxjs";
+import { PingAction, useQueryParams } from "@app/core";
+import { ServerSideStore } from "@app/redux";
+import { BookAction, BookSelector } from "@app/book";
+
 import Layout from "../components/layout";
-import { AppState } from "../lib/appState.model";
-import { BookAction } from "../lib/book/book.action";
-import { BookSelector } from "../lib/book/book.selector";
-import { ServerSideStore, wrapper } from "../lib/createStore";
-import { PingAction } from "../lib/ping/ping.action";
-import { useQueryParams } from "../lib/useQueryParam.hook";
+import { AppState, nextReduxWrapper } from "./_app.state";
 
 import styles from "./books.module.scss";
 
-export const getServerSideProps = wrapper.getServerSideProps<{}>(
+export const getServerSideProps = nextReduxWrapper.getServerSideProps<{}>(
   (store) =>
     ({ req, res, query }) => {
       return (store as ServerSideStore<AppState>).handleServerSideRendering({

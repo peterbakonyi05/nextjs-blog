@@ -16,6 +16,7 @@ This is a starter template for [Learn Next.js](https://nextjs.org/learn).
       This thread was the most useful: https://github.com/redux-observable/redux-observable/pull/539#issuecomment-712589298
       Also some of the examples in official next (`with-redux-observable`, `with-redux-wrapper`)
 - [done] add bundle analyzer to webpack config and inspect bundle size
+- [done] add inversify and refactor folder structure to mirror a bigger project with multiple libraries
 - example for lazy-loaded redux slices
 - example of handling startup config (GA key, Contentful API key etc..)
 - example of integrating a legacy system (i.e.: lazy-loaded AngularJS application on certain routes)

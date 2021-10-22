@@ -1,10 +1,12 @@
+import { injectable } from "inversify";
 import { delay, filter, interval, map, switchMap, tap } from "rxjs";
 import { isActionOf } from "typesafe-actions";
-import { createEffect, skipDispatch } from "../createEffect";
+import { createEffect, skipDispatch } from "@app/redux";
 import { PingAction } from "./ping.action";
 
-export const PingEffect = {
-  ping$: createEffect((action$) =>
+@injectable()
+export class PingEffect {
+  ping$ = createEffect((action$) =>
     action$.pipe(
       filter(isActionOf(PingAction.ping)),
       tap(() => console.log("RUNNING BookAction.ping.request")),
@@ -12,9 +14,9 @@ export const PingEffect = {
       delay(1500),
       map(() => PingAction.pong())
     )
-  ),
+  );
 
-  testingPureSideEffectCleanUp$: createEffect((action$) =>
+  testingPureSideEffectCleanUp$ = createEffect((action$) =>
     action$.pipe(
       filter(isActionOf(PingAction.ping)),
       switchMap(() =>
@@ -25,5 +27,5 @@ export const PingEffect = {
       ),
       skipDispatch()
     )
-  ),
-};
+  );
+}

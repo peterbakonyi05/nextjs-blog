@@ -1,7 +1,7 @@
 import { Action, createReducer } from "typesafe-actions";
 import { BookAction } from "./book.action";
 import { BookState } from "./book.model";
-import { UniversalAction } from "../universal/universal.action";
+import { UniversalAction } from "@app/core";
 
 const initialState: BookState = {
   isLoading: false,

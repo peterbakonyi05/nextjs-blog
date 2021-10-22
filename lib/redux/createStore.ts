@@ -21,13 +21,8 @@ import { BehaviorSubject, Observable, Subject } from "rxjs";
 
 import { extractMultipleEffects } from "./createEffect";
 import { mergeMap, take, takeUntil, timeout } from "rxjs/operators";
-import { Context, createWrapper } from "next-redux-wrapper";
-import { AppState } from "./appState.model";
-import { bookReducer } from "./book/book.reducer";
-import { BookEffect } from "./book/book.effect";
+
 import { GetServerSidePropsResult } from "next";
-import { pingReducer } from "./ping/ping.reducer";
-import { PingEffect } from "./ping/ping.effect";
 
 const DEBUG_REDUX_QUERY_PARAM = "debugRedux";
 
@@ -54,7 +49,7 @@ export interface ServerSideStore<TState> extends Store<TState> {
   }) => Promise<GetServerSidePropsResult<{}>>;
 }
 
-const createStore = <TState = object>(
+export const createStore = <TState = object>(
   config: StoreConfig<TState>
 ): AsyncStore<TState> => {
   console.log("CREATING A NEW STORE INSTANCE");
@@ -190,21 +185,3 @@ const createStore = <TState = object>(
 
   return store as AsyncStore<TState>;
 };
-
-const reduxConfig: StoreConfig<AppState> = {
-  reducers: {
-    book: bookReducer,
-    ping: pingReducer,
-  },
-  effects: [BookEffect, PingEffect],
-  devTools: true,
-};
-
-const makeStore = (context: Context) => {
-  return createStore(reduxConfig);
-};
-
-// export an assembled wrapper
-export const wrapper = createWrapper<Store<AppState>>(makeStore, {
-  debug: false,
-});

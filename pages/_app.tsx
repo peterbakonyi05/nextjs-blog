@@ -1,10 +1,16 @@
+import "reflect-metadata";
 import React from "react";
-import { wrapper } from "../lib/createStore";
+import { InjectableProvider } from "@app/core";
 
 import "../styles/global.scss";
+import { inversifyContainer, nextReduxWrapper } from "./_app.state";
 
 const App = ({ Component, pageProps }) => {
-  return <Component {...pageProps} />;
+  return (
+    <InjectableProvider container={inversifyContainer}>
+      <Component {...pageProps} />
+    </InjectableProvider>
+  );
 };
 
-export default wrapper.withRedux(App);
+export default nextReduxWrapper.withRedux(App);
